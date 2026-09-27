@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
 
     <PropertyGroup>
         <TargetFramework>net10.0-windows</TargetFramework>
@@ -22,41 +22,24 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">/run/media/system/4tb_hd/Game-Resources/Final Fantasy 14/XIVLauncher/dalamud/Hooks/dev/</DalamudLibPath>
-        <UmbraLibPath Condition="'$(UmbraLibPath)' == ''">/run/media/system/4tb_hd/Game-Resources/Final Fantasy 14/XIVLauncher/installedPlugins/Umbra/3.1.18.0/</UmbraLibPath>
+        <UmbraLibPath Condition="'$(UmbraLibPath)' == ''">$(MSBuildThisFileDirectory)..\umbra-dist\dist\</UmbraLibPath>
     </PropertyGroup>
 
     <ItemGroup>
         <Reference Include="Umbra">
-            <HintPath>..\lib\Umbra.dll</HintPath>
+            <HintPath>$(UmbraLibPath)Umbra.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="Umbra.Common">
-            <HintPath>..\lib\Umbra.Common.dll</HintPath>
+            <HintPath>$(UmbraLibPath)Umbra.Common.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="Umbra.Game">
-            <HintPath>..\lib\Umbra.Game.dll</HintPath>
+            <HintPath>$(UmbraLibPath)Umbra.Game.dll</HintPath>
             <Private>false</Private>
         </Reference>
         <Reference Include="Una.Drawing">
-            <HintPath>..\lib\Una.Drawing.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="Dalamud">
-            <HintPath>..\lib\Dalamud.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="FFXIVClientStructs">
-            <HintPath>..\lib\FFXIVClientStructs.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="Lumina">
-            <HintPath>..\lib\Lumina.dll</HintPath>
-            <Private>false</Private>
-        </Reference>
-        <Reference Include="Lumina.Excel">
-            <HintPath>..\lib\Lumina.Excel.dll</HintPath>
+            <HintPath>$(UmbraLibPath)Una.Drawing.dll</HintPath>
             <Private>false</Private>
         </Reference>
     </ItemGroup>
