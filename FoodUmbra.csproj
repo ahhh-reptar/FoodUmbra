@@ -22,7 +22,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <UmbraLibPath Condition="'$(UmbraLibPath)' == ''">$(MSBuildThisFileDirectory)..\umbra-dist\dist\</UmbraLibPath>
+        <UmbraLibPath Condition="'$(UmbraLibPath)' == ''">$(MSBuildThisFileDirectory)umbra-dist\dist\</UmbraLibPath>
     </PropertyGroup>
 
     <ItemGroup>
