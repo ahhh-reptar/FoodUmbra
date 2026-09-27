@@ -144,53 +144,40 @@ public unsafe class FoodWidget(
         ExcelSheet<ItemFood> foodSheet)
     {
         var foodResult = foodSheet.GetRowOrDefault(entry.BaseItemId);
-
+    
         if (!foodResult.HasValue)
             return item.Name.ToString();
-
+    
         var food = foodResult.Value;
+    
         var lines = new List<string>
         {
             item.Name.ToString(),
-            "Meal"
+            $"Item ID: {entry.BaseItemId}",
+            $"HQ: {entry.IsHighQuality}",
+            $"EXP: {food.EXPBonusPercent}"
         };
-
+    
+        var index = 0;
+    
         foreach (var param in food.Params)
         {
             var baseParam = param.BaseParam.Value;
-
-            if (baseParam.RowId == 0)
-                continue;
-
-            var value = entry.IsHighQuality
-                ? param.ValueHQ
-                : param.Value;
-
-            var max = entry.IsHighQuality
-                ? param.MaxHQ
-                : param.Max;
-
-            if (value == 0 && max == 0)
-                continue;
-
-            var name = baseParam.Name.ToString();
-
-            if (string.IsNullOrWhiteSpace(name))
-                continue;
-
-            var effect = param.IsRelative
-                ? $"+{value}%"
-                : $"+{value}";
-
-            if (max > 0)
-                effect += $" (Max {max})";
-
-            lines.Add($"{name}: {effect}");
+    
+            lines.Add(
+                $"Param {index}: " +
+                $"BaseParam={baseParam.RowId} " +
+                $"Name=\"{baseParam.Name}\" " +
+                $"Value={param.Value} " +
+                $"ValueHQ={param.ValueHQ} " +
+                $"Max={param.Max} " +
+                $"MaxHQ={param.MaxHQ} " +
+                $"Relative={param.IsRelative}"
+            );
+    
+            index++;
         }
-
-        if (food.EXPBonusPercent > 0)
-            lines.Add($"EXP Bonus: +{food.EXPBonusPercent}%");
-
+    
         return string.Join("\n", lines);
     }
 
