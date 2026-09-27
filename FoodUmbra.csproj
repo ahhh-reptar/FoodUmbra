@@ -16,6 +16,9 @@
         <PackageProjectUrl>https://github.com/una-xiv/umbra</PackageProjectUrl>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
         <IsPackable>false</IsPackable>
+        <Name>FoodUmbra</Name>
+        <Author>AHHH REPTAR</Author>
+        <Punchline>Browse and eat food from your inventory.</Punchline>
     </PropertyGroup>
 
     <PropertyGroup>
