@@ -20,15 +20,19 @@ jobs:
 
       - name: Get Umbra dependencies
         run: |
-          git clone --depth 1 https://github.com/una-xiv/umbra-dist.git ../umbra-dist
+          git clone --depth 1 https://github.com/una-xiv/umbra-dist.git umbra-dist
 
       - name: Build
         run: |
-          dotnet build FoodUmbra/FoodUmbra.csproj \
+          dotnet build FoodUmbra.csproj \
             --configuration Release
-
+      
+      - name: Check build output
+        run: |
+          find out -type f -maxdepth 3 -print
+          test -f out/Release/FoodUmbra.dll
+      
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            out/Release/FoodUmbra.dll
+          files: out/Release/FoodUmbra.dll
