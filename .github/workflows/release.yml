@@ -1,3 +1,4 @@
+```yaml
 name: Build Release
 
 on:
@@ -15,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
 
@@ -32,25 +33,26 @@ jobs:
           curl -L https://goatcorp.github.io/dalamud-distrib/latest.zip -o dalamud.zip
           unzip -q dalamud.zip -d ~/.xlcore/dalamud/Hooks/dev
           rm dalamud.zip
-      
+
       - name: Build
         run: |
           dotnet build FoodUmbra.csproj \
             --configuration Release
-      
+
       - name: Check build output
         run: |
           find out -type f -maxdepth 3 -print
           test -f out/Release/FoodUmbra.dll
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: FoodUmbra
           path: out/Release/FoodUmbra.dll
-      
+
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: out/Release/FoodUmbra.dll
+```
