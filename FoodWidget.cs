@@ -143,7 +143,32 @@ public unsafe class FoodWidget(
         FoodEntry entry,
         ExcelSheet<ItemFood> foodSheet)
     {
-        var foodResult = foodSheet.GetRowOrDefault(entry.BaseItemId);
+        var itemActionId = item.ItemAction.RowId;
+    
+        if (itemActionId == 0)
+            return item.Name.ToString();
+    
+        var itemActionSheet = DataManager.GetExcelSheet<ItemAction>();
+    
+        if (itemActionSheet == null)
+            return item.Name.ToString();
+    
+        var actionResult = itemActionSheet.GetRowOrDefault(itemActionId);
+    
+        if (!actionResult.HasValue)
+            return item.Name.ToString();
+    
+        var action = actionResult.Value;
+    
+        if (action.Data.Count <= 1)
+            return item.Name.ToString();
+    
+        var foodRowId = (uint)action.Data[1];
+    
+        if (foodRowId == 0)
+            return item.Name.ToString();
+    
+        var foodResult = foodSheet.GetRowOrDefault(foodRowId);
     
         if (!foodResult.HasValue)
             return item.Name.ToString();
@@ -153,29 +178,40 @@ public unsafe class FoodWidget(
         var lines = new List<string>
         {
             item.Name.ToString(),
-            $"Item ID: {entry.BaseItemId}",
-            $"HQ: {entry.IsHighQuality}",
-            $"EXP: {food.EXPBonusPercent}"
+            $"Item Level: {item.LevelItem.RowId}"
         };
-    
-        var index = 0;
     
         foreach (var param in food.Params)
         {
             var baseParam = param.BaseParam.Value;
     
-            lines.Add(
-                $"Param {index}: " +
-                $"BaseParam={baseParam.RowId} " +
-                $"Name=\"{baseParam.Name}\" " +
-                $"Value={param.Value} " +
-                $"ValueHQ={param.ValueHQ} " +
-                $"Max={param.Max} " +
-                $"MaxHQ={param.MaxHQ} " +
-                $"Relative={param.IsRelative}"
-            );
+            if (baseParam.RowId == 0)
+                continue;
     
-            index++;
+            var value = entry.IsHighQuality
+                ? param.ValueHQ
+                : param.Value;
+    
+            var max = entry.IsHighQuality
+                ? param.MaxHQ
+                : param.Max;
+    
+            if (value == 0 && max == 0)
+                continue;
+    
+            var name = baseParam.Name.ToString();
+    
+            if (string.IsNullOrWhiteSpace(name))
+                continue;
+    
+            var effect = param.IsRelative
+                ? $"+{value}%"
+                : $"+{value}";
+    
+            if (max > 0)
+                effect += $" (Max {max})";
+    
+            lines.Add($"{name}: {effect}");
         }
     
         return string.Join("\n", lines);
