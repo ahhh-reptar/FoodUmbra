@@ -127,9 +127,10 @@ public unsafe class FoodWidget(
             var menuItem = new MenuPopup.Button(displayName)
             {
                 Icon = (uint)item.Icon,
-                AltText = $"×{entry.Quantity}",
-                Tooltip = BuildFoodTooltip(item, entry, foodSheet)
+                AltText = $"×{entry.Quantity}"
             };
+            
+            menuItem.Node.Tooltip = BuildFoodTooltip(item, entry, foodSheet);
 
             menuItem.OnClick = () => UseFood(entry);
 
