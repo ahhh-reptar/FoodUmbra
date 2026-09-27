@@ -3,6 +3,7 @@ using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Umbra.Common;
 using Umbra.Widgets;
