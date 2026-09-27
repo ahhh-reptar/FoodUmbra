@@ -1,0 +1,10 @@
+/run/media/system/4tb_hd/Projects/umbra-food/out/Debug/FoodUmbra.deps.json
+/run/media/system/4tb_hd/Projects/umbra-food/out/Debug/FoodUmbra.dll
+/run/media/system/4tb_hd/Projects/umbra-food/out/Debug/FoodUmbra.pdb
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.csproj.AssemblyReference.cache
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.GeneratedMSBuildEditorConfig.editorconfig
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.AssemblyInfoInputs.cache
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.AssemblyInfo.cs
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.csproj.CoreCompileInputs.cache
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.dll
+/run/media/system/4tb_hd/Projects/umbra-food/FoodUmbra/obj/Debug/FoodUmbra.pdb
