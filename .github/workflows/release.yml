@@ -22,6 +22,13 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/una-xiv/umbra-dist.git umbra-dist
 
+      - name: Get Dalamud
+        run: |
+          mkdir -p ~/.xlcore/dalamud/Hooks/dev
+          curl -L https://goatcorp.github.io/dalamud-distrib/latest.zip -o dalamud.zip
+          unzip -q dalamud.zip -d ~/.xlcore/dalamud/Hooks/dev
+          rm dalamud.zip
+      
       - name: Build
         run: |
           dotnet build FoodUmbra.csproj \
