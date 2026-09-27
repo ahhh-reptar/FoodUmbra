@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DalamudPlugin>
+    <Name>FoodUmbra</Name>
+    <Author>AHHH REPTAR</Author>
+    <Punchline>Browse and eat food from your inventory.</Punchline>
+    <Description>Browse and eat food from your inventory through an Umbra toolbar widget.</Description>
+</DalamudPlugin>
