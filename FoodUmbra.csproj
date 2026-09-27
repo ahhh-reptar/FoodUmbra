@@ -8,7 +8,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <OutputPath>..\out\$(Configuration)\</OutputPath>
+        <OutputPath>out\$(Configuration)\</OutputPath>
     </PropertyGroup>
 
     <PropertyGroup>
