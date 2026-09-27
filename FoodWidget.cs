@@ -1,180 +1,199 @@
+using System;
 using System.Collections.Generic;
-using Dalamud.Game.Inventory;
+using System.Linq;
+using Dalamud.Game.ClientState.Inventory;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.Sheets;
 using Umbra.Common;
 using Umbra.Widgets;
+using Umbra.Widgets.MenuPopup;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 
-namespace FoodUmbra.Widgets;
+namespace FoodUmbra;
 
-[ToolbarWidget(
-    "FoodWidget",
-    "Food",
-    "Browse food in your inventory."
-)]
-public unsafe class FoodWidget(
-    WidgetInfo info,
-    string? guid = null,
-    Dictionary<string, object>? configValues = null
-) : StandardToolbarWidget(info, guid, configValues)
+public sealed class FoodWidget : StandardToolbarWidget
 {
-    protected override StandardWidgetFeatures Features =>
-        StandardWidgetFeatures.Text |
-        StandardWidgetFeatures.Icon |
-        StandardWidgetFeatures.CustomizableIcon;
-
-    protected override uint DefaultGameIconId => 60146;
-
-    public override MenuPopup Popup { get; } = new();
-
     private IGameInventory GameInventory =>
         (IGameInventory)Framework.DalamudPlugin.GetService(typeof(IGameInventory))!;
 
-    private IGameGui GameGui =>
-    (IGameGui)Framework.DalamudPlugin.GetService(typeof(IGameGui))!;
-    
     private IDataManager DataManager =>
         (IDataManager)Framework.DalamudPlugin.GetService(typeof(IDataManager))!;
 
-    protected override void OnLoad()
+    private readonly MenuPopup Popup = new();
+
+    public FoodWidget()
     {
-        SetText("Food");
+        Id = "FoodUmbra";
+        IconId = 60146;
+        Priority = 0;
+
         Popup.OnPopupOpen += RebuildMenu;
-        RebuildMenu();
     }
 
-    protected override void OnDraw() {}
-
-    protected override void OnUnload()
+    public override void OnUnload()
     {
         Popup.OnPopupOpen -= RebuildMenu;
+        Popup.Dispose();
+
+        base.OnUnload();
+    }
+
+    protected override void OnClick()
+    {
+        Popup.Toggle();
     }
 
     private void RebuildMenu()
     {
         Popup.Clear();
 
-        var itemSheet = DataManager.GetExcelSheet<Item>();
+        var entries = ScanFood();
 
-        var food = new Dictionary<(uint BaseItemId, bool IsHq), FoodEntry>();
-
-        foreach (var (inventoryType, ffxivInventoryType) in new[]
+        if (entries.Count == 0)
         {
-            (GameInventoryType.Inventory1, InventoryType.Inventory1),
-            (GameInventoryType.Inventory2, InventoryType.Inventory2),
-            (GameInventoryType.Inventory3, InventoryType.Inventory3),
-            (GameInventoryType.Inventory4, InventoryType.Inventory4)
-        })
-        {
-            var items = GameInventory.GetInventoryItems(inventoryType);
-
-            for (var slot = 0; slot < items.Length; slot++)
+            Popup.Add(new MenuPopup.Button
             {
-                var inventoryItem = items[slot];
+                Text = "No food in inventory",
+                IsDisabled = true,
+            });
 
-                if (inventoryItem.IsEmpty || inventoryItem.Quantity == 0)
-                    continue;
-
-                var baseItemId = inventoryItem.BaseItemId;
-                var actualItemId = inventoryItem.ItemId;
-                var isHq = inventoryItem.IsHq;
-
-                var itemResult = itemSheet.GetRowOrDefault(baseItemId);
-
-                if (!itemResult.HasValue)
-                    continue;
-
-                var item = itemResult.Value;
-
-                // Item.FilterGroup 5 = Meal.
-                if (item.FilterGroup != 5)
-                    continue;
-
-                var key = (baseItemId, isHq);
-
-                if (food.TryGetValue(key, out var existing))
-                {
-                    existing.Quantity += inventoryItem.Quantity;
-                }
-                else
-                {
-                    food[key] = new FoodEntry(
-                        baseItemId,
-                        actualItemId,
-                        isHq,
-                        inventoryItem.Quantity,
-                        ffxivInventoryType,
-                        (uint)slot
-                    );
-                }
-            }
+            return;
         }
 
-        foreach (var entry in food.Values)
+        foreach (var entry in entries)
         {
-            var itemResult = itemSheet.GetRowOrDefault(entry.BaseItemId);
+            var item = DataManager.GetExcelSheet<Item>()
+                .GetRow(entry.BaseItemId);
 
-            if (!itemResult.HasValue)
-                continue;
-
-            var item = itemResult.Value;
-
-            var displayName = entry.IsHighQuality
-                ? $"★ {item.Name}"
-                : item.Name.ToString();
-
-            var menuItem = new MenuPopup.Button(displayName)
+            var menuItem = new MenuPopup.Button
             {
-                Icon = (uint)item.Icon,
-                AltText = $"×{entry.Quantity}"
+                Text = $"{(entry.IsHighQuality ? "★ " : "")}{item.Name}",
+                AltText = $"×{entry.Quantity}",
+                IconId = (uint)item.Icon,
+                Tooltip = BuildFoodTooltip(item, entry),
             };
 
-            menuItem.OnClick = () => UseFood(entry);
+            menuItem.OnClick = () =>
+            {
+                var inventoryContext = AgentInventoryContext.Instance();
 
-            menuItem.Node.OnMouseEnter += _ =>
-            {
-                GameGui.HoveredItem = entry.ActualItemId;
-            };
-            
-            menuItem.Node.OnMouseLeave += _ =>
-            {
-                GameGui.HoveredItem = 0;
+                if (inventoryContext == null)
+                    return;
+
+                inventoryContext->UseItem(
+                    entry.ActualItemId,
+                    entry.InventoryType,
+                    entry.InventorySlot);
             };
 
             Popup.Add(menuItem);
         }
     }
 
-    private static void UseFood(FoodEntry entry)
+    private List<FoodEntry> ScanFood()
     {
-        var agent = AgentInventoryContext.Instance();
+        var results = new Dictionary<(uint BaseItemId, bool IsHq), FoodEntry>();
 
-        if (agent == null)
-            return;
+        foreach (var inventoryItem in GameInventory.GetInventoryItems())
+        {
+            if (inventoryItem.ItemId == 0)
+                continue;
 
-        agent->UseItem(
-            entry.ActualItemId,
-            entry.InventoryType,
-            entry.InventorySlot
-        );
+            if (inventoryItem.Item == null)
+                continue;
+
+            if (inventoryItem.Item.Value.FilterGroup != 5)
+                continue;
+
+            var key = (inventoryItem.BaseItemId, inventoryItem.IsHq);
+
+            if (results.TryGetValue(key, out var existing))
+            {
+                results[key] = existing with
+                {
+                    Quantity = existing.Quantity + inventoryItem.Quantity,
+                };
+            }
+            else
+            {
+                results[key] = new FoodEntry(
+                    BaseItemId: inventoryItem.BaseItemId,
+                    ActualItemId: inventoryItem.ItemId,
+                    IsHighQuality: inventoryItem.IsHq,
+                    Quantity: inventoryItem.Quantity,
+                    InventoryType: inventoryItem.InventorySlot.Type,
+                    InventorySlot: inventoryItem.InventorySlot.Slot);
+            }
+        }
+
+        return results.Values
+            .OrderByDescending(x => x.IsHighQuality)
+            .ThenBy(x =>
+            {
+                var item = DataManager.GetExcelSheet<Item>()
+                    .GetRow(x.BaseItemId);
+
+                return item.Name.ToString();
+            })
+            .ToList();
     }
 
-    private sealed class FoodEntry(
-        uint baseItemId,
-        uint actualItemId,
-        bool isHighQuality,
-        int quantity,
-        InventoryType inventoryType,
-        uint inventorySlot
-    )
+    private string BuildFoodTooltip(Item item, FoodEntry entry)
     {
-        public uint BaseItemId { get; } = baseItemId;
-        public uint ActualItemId { get; } = actualItemId;
-        public bool IsHighQuality { get; } = isHighQuality;
-        public int Quantity { get; set; } = quantity;
-        public InventoryType InventoryType { get; } = inventoryType;
-        public uint InventorySlot { get; } = inventorySlot;
+        var foodSheet = DataManager.GetExcelSheet<ItemFood>();
+        var food = foodSheet.GetRow(entry.BaseItemId);
+
+        var lines = new List<string>
+        {
+            item.Name.ToString(),
+            "Meal",
+        };
+
+        foreach (var param in food.Params)
+        {
+            var baseParam = param.BaseParam.Value;
+
+            if (baseParam.RowId == 0)
+                continue;
+
+            var value = entry.IsHighQuality
+                ? param.ValueHQ
+                : param.Value;
+
+            var max = entry.IsHighQuality
+                ? param.MaxHQ
+                : param.Max;
+
+            if (value == 0 && max == 0)
+                continue;
+
+            var paramName = baseParam.Name.ToString();
+
+            if (string.IsNullOrWhiteSpace(paramName))
+                continue;
+
+            var effect = param.IsRelative
+                ? $"+{value}%"
+                : $"+{value}";
+
+            if (max > 0)
+                effect += $" (Max {max})";
+
+            lines.Add($"{paramName}: {effect}");
+        }
+
+        if (food.EXPBonusPercent > 0)
+            lines.Add($"EXP Bonus: +{food.EXPBonusPercent}%");
+
+        return string.Join("\n", lines);
     }
+
+    private readonly record struct FoodEntry(
+        uint BaseItemId,
+        uint ActualItemId,
+        bool IsHighQuality,
+        uint Quantity,
+        InventoryType InventoryType,
+        uint InventorySlot);
 }
