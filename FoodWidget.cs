@@ -32,6 +32,9 @@ public unsafe class FoodWidget(
     private IGameInventory GameInventory =>
         (IGameInventory)Framework.DalamudPlugin.GetService(typeof(IGameInventory))!;
 
+    private IGameGui GameGui =>
+    (IGameGui)Framework.DalamudPlugin.GetService(typeof(IGameGui))!;
+    
     private IDataManager DataManager =>
         (IDataManager)Framework.DalamudPlugin.GetService(typeof(IDataManager))!;
 
@@ -129,6 +132,16 @@ public unsafe class FoodWidget(
             };
 
             menuItem.OnClick = () => UseFood(entry);
+
+            menuItem.Node.OnMouseEnter += _ =>
+            {
+                GameGui.HoveredItem = entry.ActualItemId;
+            };
+            
+            menuItem.Node.OnMouseLeave += _ =>
+            {
+                GameGui.HoveredItem = 0;
+            };
 
             Popup.Add(menuItem);
         }
