@@ -74,21 +74,21 @@ public unsafe class FoodWidget(
                 if (inventoryItem.IsEmpty || inventoryItem.Quantity == 0)
                     continue;
 
-                var itemId = inventoryItem.BaseItemId;
+                var baseItemId = inventoryItem.BaseItemId;
+                var actualItemId = inventoryItem.ItemId;
                 var isHq = inventoryItem.IsHq;
 
-                var itemResult = itemSheet.GetRowOrDefault(itemId);
-
+                var itemResult = itemSheet.GetRowOrDefault(entry.BaseItemId);
+                
                 if (!itemResult.HasValue)
                     continue;
-
+                
                 var item = itemResult.Value;
-
-                // Item.FilterGroup 5 = Meal.
+                
                 if (item.FilterGroup != 5)
                     continue;
-
-                var key = (itemId, isHq);
+                
+                var key = (baseItemId, isHq);
 
                 if (food.TryGetValue(key, out var existing))
                 {
@@ -97,7 +97,8 @@ public unsafe class FoodWidget(
                 else
                 {
                     food[key] = new FoodEntry(
-                        itemId,
+                        baseItemId,
+                        actualItemId,
                         isHq,
                         inventoryItem.Quantity,
                         ffxivInventoryType,
@@ -140,21 +141,23 @@ public unsafe class FoodWidget(
             return;
 
         agent->UseItem(
-            entry.ItemId,
+            entry.ActualItemId,
             entry.InventoryType,
             entry.InventorySlot
         );
     }
 
     private sealed class FoodEntry(
-        uint itemId,
+        uint baseItemId,
+        uint actualItemId,
         bool isHighQuality,
         int quantity,
         InventoryType inventoryType,
         uint inventorySlot
     )
     {
-        public uint ItemId { get; } = itemId;
+        public uint BaseItemId { get; } = baseItemId;
+        public uint ActualItemId { get; } = actualItemId;
         public bool IsHighQuality { get; } = isHighQuality;
         public int Quantity { get; set; } = quantity;
         public InventoryType InventoryType { get; } = inventoryType;
