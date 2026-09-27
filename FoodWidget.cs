@@ -21,19 +21,19 @@ public unsafe class FoodWidget(
 ) : StandardToolbarWidget(info, guid, configValues)
 {
     protected override StandardWidgetFeatures Features =>
-    StandardWidgetFeatures.Text |
-    StandardWidgetFeatures.Icon |
-    StandardWidgetFeatures.CustomizableIcon;
+        StandardWidgetFeatures.Text |
+        StandardWidgetFeatures.Icon |
+        StandardWidgetFeatures.CustomizableIcon;
 
     protected override uint DefaultGameIconId => 60146;
 
     public override MenuPopup Popup { get; } = new();
 
     private IGameInventory GameInventory =>
-    (IGameInventory)Framework.DalamudPlugin.GetService(typeof(IGameInventory))!;
+        (IGameInventory)Framework.DalamudPlugin.GetService(typeof(IGameInventory))!;
 
     private IDataManager DataManager =>
-    (IDataManager)Framework.DalamudPlugin.GetService(typeof(IDataManager))!;
+        (IDataManager)Framework.DalamudPlugin.GetService(typeof(IDataManager))!;
 
     protected override void OnLoad()
     {
@@ -55,14 +55,14 @@ public unsafe class FoodWidget(
 
         var itemSheet = DataManager.GetExcelSheet<Item>();
 
-        var food = new Dictionary<(uint ItemId, bool IsHq), FoodEntry>();
+        var food = new Dictionary<(uint BaseItemId, bool IsHq), FoodEntry>();
 
         foreach (var (inventoryType, ffxivInventoryType) in new[]
         {
             (GameInventoryType.Inventory1, InventoryType.Inventory1),
-                 (GameInventoryType.Inventory2, InventoryType.Inventory2),
-                 (GameInventoryType.Inventory3, InventoryType.Inventory3),
-                 (GameInventoryType.Inventory4, InventoryType.Inventory4)
+            (GameInventoryType.Inventory2, InventoryType.Inventory2),
+            (GameInventoryType.Inventory3, InventoryType.Inventory3),
+            (GameInventoryType.Inventory4, InventoryType.Inventory4)
         })
         {
             var items = GameInventory.GetInventoryItems(inventoryType);
@@ -78,16 +78,17 @@ public unsafe class FoodWidget(
                 var actualItemId = inventoryItem.ItemId;
                 var isHq = inventoryItem.IsHq;
 
-                var itemResult = itemSheet.GetRowOrDefault(entry.BaseItemId);
-                
+                var itemResult = itemSheet.GetRowOrDefault(baseItemId);
+
                 if (!itemResult.HasValue)
                     continue;
-                
+
                 var item = itemResult.Value;
-                
+
+                // Item.FilterGroup 5 = Meal.
                 if (item.FilterGroup != 5)
                     continue;
-                
+
                 var key = (baseItemId, isHq);
 
                 if (food.TryGetValue(key, out var existing))
@@ -110,7 +111,7 @@ public unsafe class FoodWidget(
 
         foreach (var entry in food.Values)
         {
-            var itemResult = itemSheet.GetRowOrDefault(entry.ItemId);
+            var itemResult = itemSheet.GetRowOrDefault(entry.BaseItemId);
 
             if (!itemResult.HasValue)
                 continue;
@@ -118,8 +119,8 @@ public unsafe class FoodWidget(
             var item = itemResult.Value;
 
             var displayName = entry.IsHighQuality
-            ? $"★ {item.Name}"
-            : item.Name.ToString();
+                ? $"★ {item.Name}"
+                : item.Name.ToString();
 
             var menuItem = new MenuPopup.Button(displayName)
             {
