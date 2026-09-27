@@ -9,9 +9,6 @@
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <OutputPath>out\$(Configuration)\</OutputPath>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <Authors>AHHH REPTAR</Authors>
         <Company>FoodUmbra</Company>
         <Version>0.1.0</Version>
